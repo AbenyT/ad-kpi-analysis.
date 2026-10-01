@@ -1,0 +1,20 @@
+# Local MySQL 8.0 for the analysis.
+# Start:  docker compose up -d      Stop:  docker compose down
+# Credentials are for local development only.
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ad_kpi_mysql
+    command: --local-infile=1          # allow LOAD DATA LOCAL INFILE (used in sql/00_load.sql)
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ad_kpi
+      MYSQL_USER: analyst
+      MYSQL_PASSWORD: analyst
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
