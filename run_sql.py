@@ -7,6 +7,7 @@ the defaults match docker-compose.yml.
 """
 import os
 import sys
+from decimal import Decimal
 from pathlib import Path
 
 import pymysql
@@ -31,6 +32,13 @@ def split_statements(sql: str) -> list[str]:
     return [stmt.strip() for stmt in "\n".join(lines).split(";") if stmt.strip()]
 
 
+def tidy(value):
+    """MySQL returns SUM() and COUNT-like results as Decimal; show whole numbers as int."""
+    if isinstance(value, Decimal) and value.as_tuple().exponent >= 0:
+        return int(value)
+    return value
+
+
 def run(sql_file: str) -> None:
     sql = Path(sql_file).read_text()
     load_env_file()
@@ -49,7 +57,8 @@ def run(sql_file: str) -> None:
             cur.execute(statement)
             if cur.description:  # only queries that return rows
                 headers = [col[0] for col in cur.description]
-                print(tabulate(cur.fetchall(), headers=headers, tablefmt="psql",
+                rows = [[tidy(v) for v in row] for row in cur.fetchall()]
+                print(tabulate(rows, headers=headers, tablefmt="psql",
                                floatfmt=".2f"))
                 print()
 
