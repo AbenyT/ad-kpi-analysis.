@@ -1,0 +1,13 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# DuckDB database files (rebuilt from the CSV)
+*.duckdb
+*.duckdb.wal
+
+# Notebooks / OS / secrets
+.ipynb_checkpoints/
+.DS_Store
+.env
