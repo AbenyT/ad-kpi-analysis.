@@ -1,6 +1,7 @@
-"""Run a .sql file against the MySQL database and print the result of every query.
+"""Run .sql files against the MySQL database and print the result of every query.
 
-Usage:  python run_sql.py sql/00_load.sql
+Usage:  python run_sql.py sql/00_load.sql      (one file)
+        python run_sql.py sql/*.sql            (whole pipeline, in file-name order)
 
 Connection settings come from environment variables (see .env.example);
 the defaults match docker-compose.yml.
@@ -67,6 +68,10 @@ def run(sql_file: str) -> None:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        sys.exit("Usage: python run_sql.py <path/to/file.sql>")
-    run(sys.argv[1])
+    if len(sys.argv) < 2:
+        sys.exit("Usage: python run_sql.py <file.sql> [more.sql ...]")
+    files = sorted(sys.argv[1:])
+    for sql_file in files:
+        if len(files) > 1:
+            print(f"===== {sql_file} =====")
+        run(sql_file)

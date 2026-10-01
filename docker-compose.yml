@@ -1,20 +1,42 @@
-# Local MySQL 8.0 for the analysis.
-# Start:  docker compose up -d      Stop:  docker compose down
+# MySQL 8.0 (analysis database) + Metabase (dashboard).
+#   Start:  docker compose up -d
+#   Stop:   docker compose down          (data is kept in named volumes)
+#   Reset:  docker compose down -v       (deletes the database and Metabase settings)
 # Credentials are for local development only.
 services:
   mysql:
     image: mysql:8.0
     container_name: ad_kpi_mysql
-    command: --local-infile=1          # allow LOAD DATA LOCAL INFILE (used in sql/00_load.sql)
+    command: --local-infile=1                     # allow LOAD DATA LOCAL INFILE (sql/00_load.sql)
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: ad_kpi
-      MYSQL_USER: analyst
+      MYSQL_USER: analyst                         # read/write user for run_sql.py
       MYSQL_PASSWORD: analyst
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT:-3306}:3306"                # change MYSQL_PORT in .env if 3306 is taken
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./docker/mysql-init:/docker-entrypoint-initdb.d:ro   # creates the read-only metabase_ro user
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  metabase:
+    image: metabase/metabase:v0.63.19
+    container_name: ad_kpi_metabase
+    environment:
+      MB_DB_FILE: /metabase-data/metabase.db      # keep Metabase's own settings in a volume
+    ports:
+      - "3000:3000"
+    volumes:
+      - metabase_data:/metabase-data
+    depends_on:
+      mysql:
+        condition: service_healthy
 
 volumes:
   mysql_data:
+  metabase_data:
