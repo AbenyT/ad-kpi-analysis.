@@ -33,10 +33,13 @@ def split_statements(sql: str) -> list[str]:
 
 
 def tidy(value):
-    """MySQL returns SUM() and COUNT-like results as Decimal; show whole numbers as int."""
+    """Show values exactly as SQL returned them (the SQL decides the rounding).
+
+    MySQL returns SUM() of integers as Decimal, so whole-number Decimals become int.
+    """
     if isinstance(value, Decimal) and value.as_tuple().exponent >= 0:
         return int(value)
-    return value
+    return value if value is None else str(value)
 
 
 def run(sql_file: str) -> None:
@@ -59,7 +62,7 @@ def run(sql_file: str) -> None:
                 headers = [col[0] for col in cur.description]
                 rows = [[tidy(v) for v in row] for row in cur.fetchall()]
                 print(tabulate(rows, headers=headers, tablefmt="psql",
-                               floatfmt=".2f"))
+                               disable_numparse=True, stralign="right"))
                 print()
 
 
