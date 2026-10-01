@@ -6,6 +6,7 @@ Usage:  python run_sql.py sql/00_load.sql      (one file)
 Connection settings come from environment variables (see .env.example);
 the defaults match docker-compose.yml.
 """
+import glob
 import os
 import sys
 from decimal import Decimal
@@ -70,7 +71,8 @@ def run(sql_file: str) -> None:
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         sys.exit("Usage: python run_sql.py <file.sql> [more.sql ...]")
-    files = sorted(sys.argv[1:])
+    # Expand patterns here too: Windows shells pass "sql/*.sql" through unexpanded
+    files = sorted({f for arg in sys.argv[1:] for f in (glob.glob(arg) or [arg])})
     for sql_file in files:
         if len(files) > 1:
             print(f"===== {sql_file} =====")
