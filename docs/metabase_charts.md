@@ -61,7 +61,8 @@ Click **Visualization** → **Bar**. Metabase picks the label column for the X-a
 Then click the **gear** icon:
 
 - **Display** tab: turn on **Show values on data points**.
-- **Display** tab (CPA charts only): turn on **Goal line**, value `54.41`, label `Account CPA $54.41`.
+- **Display** tab (CPA charts only): turn on **Goal line**, value `54.41`, label `Avg $54.41`. A short label doesn't cover the bar values.
+- **Data** tab (CTR charts only): under **Y-axis**, click **⋯** next to `ctr_pct` → **Formatting** → **Number of decimal places** `4`, so the bar values show `0.0234` instead of `0.023`.
 - **Axes** tab: X-axis title (`Campaign`, `Age group` or `Gender`), Y-axis title (`CPA (USD)` or `CTR (%)`).
 - **Data** tab: click the colour dot of the series and pick **one blue for every bar chart**.
   Avoid red and green: viewers read them as "bad" and "good".
