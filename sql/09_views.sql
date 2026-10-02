@@ -8,18 +8,19 @@
 --   * v_kpi_*         : pre-calculated KPIs, one per analysis in 03-08.
 --
 -- KPI rules (same as 03-08): ratios of totals, NULLIF guards, approved conversions for CPA.
--- Written in portable SQL where possible (CASE instead of IF, no ROLLUP) so the views
--- also run in PostgreSQL.
+-- Text labels built in SQL (campaign, gender, segment) get an explicit collation.
+-- Without it MySQL gives them the collation of the connection that created the view, and
+-- Metabase filters fail with "Illegal mix of collations".
 
 -- 1. Row-level base view with labels
 CREATE OR REPLACE VIEW v_ads AS
 SELECT
     ad_id,
     campaign_id,
-    CONCAT('Campaign ', campaign_id)                            AS campaign,
+    CONVERT(CONCAT('Campaign ', campaign_id) USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS campaign,
     fb_campaign_id,
     age_group,
-    CASE gender WHEN 'F' THEN 'Female' WHEN 'M' THEN 'Male' END AS gender,
+    CONVERT(CASE gender WHEN 'F' THEN 'Female' WHEN 'M' THEN 'Male' END USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS gender,
     interest_id,
     impressions,
     clicks,
@@ -50,7 +51,7 @@ FROM ads_clean;
 CREATE OR REPLACE VIEW v_kpi_campaign AS
 SELECT
     campaign_id,
-    CONCAT('Campaign ', campaign_id)                                            AS campaign,
+    CONVERT(CONCAT('Campaign ', campaign_id) USING utf8mb4) COLLATE utf8mb4_0900_ai_ci         AS campaign,
     COUNT(*)                                                                    AS ads,
     SUM(impressions)                                                            AS impressions,
     SUM(clicks)                                                                 AS clicks,
@@ -90,7 +91,7 @@ GROUP BY age_group;
 -- 5. KPIs per gender
 CREATE OR REPLACE VIEW v_kpi_gender AS
 SELECT
-    CASE gender WHEN 'F' THEN 'Female' WHEN 'M' THEN 'Male' END                 AS gender,
+    CONVERT(CASE gender WHEN 'F' THEN 'Female' WHEN 'M' THEN 'Male' END USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS gender,
     COUNT(*)                                                                    AS ads,
     SUM(impressions)                                                            AS impressions,
     SUM(clicks)                                                                 AS clicks,
@@ -183,11 +184,11 @@ flagged AS (
     CROSS JOIN account a
 )
 SELECT
-    CONCAT('Campaign ', campaign_id, ' | ', age_group, ' | ',
-           CASE gender WHEN 'F' THEN 'Female' WHEN 'M' THEN 'Male' END)          AS segment,
+    CONVERT(CONCAT('Campaign ', campaign_id, ' | ', age_group, ' | ',
+           CASE gender WHEN 'F' THEN 'Female' WHEN 'M' THEN 'Male' END) USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS segment,
     campaign_id,
     age_group,
-    CASE gender WHEN 'F' THEN 'Female' WHEN 'M' THEN 'Male' END                  AS gender,
+    CONVERT(CASE gender WHEN 'F' THEN 'Female' WHEN 'M' THEN 'Male' END USING utf8mb4) COLLATE utf8mb4_0900_ai_ci AS gender,
     ads, impressions, clicks, spent_usd, spend_share_pct, approved_conv, free_approved_conv,
     ctr_pct, cpc_usd,
     ROUND(cpa_exact, 2)                                                          AS cpa_usd,
